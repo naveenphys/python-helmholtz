@@ -1,81 +1,71 @@
 ! declaration for pipelining the eos routines
 
-! maximum length of the row vector
-      integer   nrowmax
-      parameter (nrowmax = 1000)
-!      parameter (nrowmax = 1000)
+!> nrowmax: maximum length of the input row vector (thermodynamic and composition inputs)
+      integer, parameter :: nrowmax = 1000
 
+!> irowmax: maximum number of isotopes
+      integer, parameter :: irowmax = 1
 
-! maximum number of isotopes
-      integer   irowmax
-      parameter (irowmax = 1)
-!      parameter (irowmax = 600)
+!> jstagemax: maximum number of ionization stages
+      integer, parameter :: jstagemax = 1
 
-
-! maximum number of ionization stages
-      integer   jstagemax
-      parameter (jstagemax = 1)
-!      parameter (jstagemax = 30)
-
-
-! failure of an eos
-      logical          eosfail
+!> eosfail: logical variable to indicate failure of an eos
+      logical :: eosfail
       common /eosfc1/  eosfail
 
+!> lower and upper limits of the loop over rows
+!> ???
+      integer :: jlo_eos, jhi_eos
+      common /eosvec2/ jlo_eos, jhi_eos
 
+!> inputs: thermodynamic and composition variables
+!> what defines the EoS (refer to Timmes 1998)
+      double precision :: temp_row(nrowmax), den_row(nrowmax)
+      double precision :: temp_row(nrowmax), den_row(nrowmax)
+      double precision :: abar_row(nrowmax), zbar_row(nrowmax)
+      double precision :: zeff_row(nrowmax), ye_row(nrowmax)
 
-! lower and upper limits of the loop over rows
-      integer          jlo_eos,jhi_eos
-      common /eosvec2/ jlo_eos,jhi_eos
+!> thinp: common block 'the input' -> 'thinp'
+      common /thinp/ temp_row,den_row, abar_row,zbar_row, zeff_row,ye_row
 
-
-
-! thermodynamic and composition inputs
-      double precision &
-                temp_row(nrowmax),den_row(nrowmax), &
-                abar_row(nrowmax),zbar_row(nrowmax), &
-                zeff_row(nrowmax),ye_row(nrowmax)
-
-      common /thinp/ &
-                temp_row,den_row, &
-                abar_row,zbar_row, &
-                zeff_row,ye_row
-
-
-! composition input
-      integer          niso
-      double precision xmass_row(irowmax,nrowmax), &
-                       aion_row(irowmax,nrowmax), &
-                       zion_row(irowmax,nrowmax)
+!> composition input
+!> niso: number of nuclear species
+!> xmass_row: why are these 2d arrays??
+      integer :: niso
+      double precision :: xmass_row(irowmax,nrowmax)
+      double precision :: aion_row(irowmax,nrowmax)
+      double precision :: zion_row(irowmax,nrowmax)
+                       
+!> cmpinp: common block with the input composition
+!> 'composition input' -> 'cmpinp'
       common  /cmpinp/ xmass_row,aion_row,zion_row,niso
 
+!> composition output ??
+!> why are these 3d arrays?
+      double precision :: frac_row(jstagemax,irowmax,nrowmax)
 
+!> cmpout: common block with the output composition
+!> 'composition output' -> 'cmpout'
+      common /cmpout/ frac_row
 
-! composition output
-      double precision frac_row(jstagemax,irowmax,nrowmax)
-      common /cmpout/  frac_row
+!> composition output for sneos
+!> what is sneos?
+      double precision :: xn_row(nrowmax), xp_row(nrowmax)
+      double precision :: xa_row(nrowmax), xhv_row(nrowmax)
+      double precision :: xmuhat_row(nrowmax)
+      common /cmpout2/ xn_row, xp_row, xa_row, xhv_row, xmuhat_row
 
-
-! composition output for sneos
-      double precision xn_row(nrowmax),xp_row(nrowmax), &
-                       xa_row(nrowmax),xhv_row(nrowmax), &
-                       xmuhat_row(nrowmax)
-      common /cmpout2/ xn_row,xp_row, &
-                       xa_row,xhv_row, &
-                       xmuhat_row
-
-
-
-! totals and their derivatives
-      double precision &
-                ptot_row(nrowmax), &
-                dpt_row(nrowmax),dpd_row(nrowmax), &
-                dpa_row(nrowmax),dpz_row(nrowmax), &
-                dpdd_row(nrowmax),dpdt_row(nrowmax), &
-                dpda_row(nrowmax),dpdz_row(nrowmax), &
-                dptt_row(nrowmax),dpta_row(nrowmax), &
-                dptz_row(nrowmax),dpaa_row(nrowmax), &
-                dpaz_row(nrowmax),dpzz_row(nrowmax)
+!> total pressure
+!> p_tot = p_gas + p_radiation + 
+      double precision :: ptot_row(nrowmax)
+! derivatives of total pressure
+      double precision :: dpt_row(nrowmax),  dpd_row(nrowmax)
+      double precision :: dpa_row(nrowmax),  dpz_row(nrowmax)
+      double precision :: dpdd_row(nrowmax), dpdt_row(nrowmax)
+      double precision :: dpda_row(nrowmax), dpdz_row(nrowmax)
+      double precision :: dptt_row(nrowmax), dpta_row(nrowmax)
+      double precision :: dptz_row(nrowmax), dpaa_row(nrowmax)
+      double precision :: dpaz_row(nrowmax), dpzz_row(nrowmax)
 
       common /ptotc1/ &
                 ptot_row, &
@@ -87,15 +77,17 @@
                 dptz_row,dpaa_row, &
                 dpaz_row,dpzz_row
 
-      double precision &
-                etot_row(nrowmax), &
-                det_row(nrowmax),ded_row(nrowmax), &
-                dea_row(nrowmax),dez_row(nrowmax), &
-                dedd_row(nrowmax),dedt_row(nrowmax), &
-                deda_row(nrowmax),dedz_row(nrowmax), &
-                dett_row(nrowmax),deta_row(nrowmax), &
-                detz_row(nrowmax),deaa_row(nrowmax), &
-                deaz_row(nrowmax),dezz_row(nrowmax)
+!> total energy
+!> e_tot = e_gas + e_radiation + 
+      double precision :: etot_row(nrowmax)
+! derivatives of total pressure
+      double precision :: det_row(nrowmax),  ded_row(nrowmax)
+      double precision :: dea_row(nrowmax),  dez_row(nrowmax)
+      double precision :: dedd_row(nrowmax), dedt_row(nrowmax)
+      double precision :: deda_row(nrowmax), dedz_row(nrowmax)
+      double precision :: dett_row(nrowmax), deta_row(nrowmax)
+      double precision :: detz_row(nrowmax), deaa_row(nrowmax)
+      double precision :: deaz_row(nrowmax), dezz_row(nrowmax)
 
       common /etotc1/ &
                 etot_row, &
@@ -252,11 +244,6 @@
                 dsgastz_row,dsgasaa_row, &
                 dsgasaz_row,dsgaszz_row
 
-
-
-
-
-
 ! ion contributions
       double precision &
                 pion_row(nrowmax), &
@@ -277,7 +264,6 @@
                 dpiontz_row,dpionaa_row, &
                 dpionaz_row,dpionzz_row
 
-
       double precision &
                 eion_row(nrowmax), &
                 deiont_row(nrowmax),deiond_row(nrowmax), &
@@ -296,7 +282,6 @@
                 deiontt_row,deionta_row, &
                 deiontz_row,deionaa_row, &
                 deionaz_row,deionzz_row
-
 
       double precision &
                 sion_row(nrowmax), &
@@ -359,7 +344,6 @@
 
 
 ! electron-positron contributions
-
       double precision &
                etaele_row(nrowmax),etapos_row(nrowmax), &
                detat_row(nrowmax),detad_row(nrowmax), &
